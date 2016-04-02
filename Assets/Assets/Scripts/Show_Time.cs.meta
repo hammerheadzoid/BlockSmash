@@ -1,0 +1,14 @@
+fileFormatVersion: 2
+guid: b1f1c78609bae0142a60621fe0fa695e
+timeCreated: 1453919761
+licenseType: Free
+MonoImporter:
+  serializedVersion: 2
+  defaultReferences:
+  - Alarm_Sound: {fileID: 8300000, guid: 1aeceab9d73027c4c848a9939a82628a, type: 3}
+  - settingsicon_material: {instanceID: 0}
+  executionOrder: 0
+  icon: {instanceID: 0}
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 
