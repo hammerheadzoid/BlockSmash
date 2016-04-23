@@ -6,7 +6,7 @@ public class Show_Time : MonoBehaviour
 
     public AudioClip Alarm_Sound;
 
-    public int difficulty = 10;
+    private int difficulty = 10;// don't change, screen scaling depends on this for the alarm clock functionality (value should be 10)
     public int colorcount = 5;//with higher difficulties, colorcount can be increased to include more colours, (max is 7 for now)
     private int randcolour;
     private int oldcolour;
@@ -34,14 +34,16 @@ public class Show_Time : MonoBehaviour
     public bool playonce;
     private int tmpblockcount = 0;
     private Material tmpmaterial;
+    private const int backgroundarraysize=8;
 
+    private int backgroundblocks;
     public int remainingblocks;
+    private bool alarminitialtrigger;
 
     private bool screenchange = false;
     private float flashtimer = 0;
     private bool colourtoggle = false;
-    private Color[] backgroundcolours = new Color[9]{
-        Color.black,
+    private Color[] backgroundcolours = new Color[backgroundarraysize]{
         Color.blue,
         Color.cyan,
         Color.gray,
@@ -56,7 +58,7 @@ public class Show_Time : MonoBehaviour
 
     void Start()
     {
-
+        //create wall
         GameObject blockparent = new GameObject();
         blockparent.name = "Wall";
         playonce = true;
@@ -80,6 +82,9 @@ public class Show_Time : MonoBehaviour
 
         //set background colour initially
         Camera.main.backgroundColor = Color.black;
+
+        //set alarm trigger flag, used to execute code once per alarm activation
+        alarminitialtrigger = true;
 
         //create wall skeleton
         wall = new GameObject[difficulty, difficulty * 2];//2d array containing all blocks
@@ -205,7 +210,7 @@ public class Show_Time : MonoBehaviour
                 }
             }
         }
-        remainingblocks = (difficulty - 1) * ((difficulty * 2) - 1);
+        backgroundblocks = (difficulty - 1) * ((difficulty * 2) - 1);
     }
 
     void showdigit(int digit, int offset)
@@ -389,6 +394,7 @@ public class Show_Time : MonoBehaviour
 
         if (digit == 0)
         {
+            //disable object rendering
             wall[2, offset + 0].GetComponent<Renderer>().enabled = false;
             wall[3, offset + 0].GetComponent<Renderer>().enabled = false;
             wall[4, offset + 0].GetComponent<Renderer>().enabled = false;
@@ -401,19 +407,46 @@ public class Show_Time : MonoBehaviour
             wall[3, offset + 2].GetComponent<Renderer>().enabled = false;
             wall[2, offset + 2].GetComponent<Renderer>().enabled = false;
             wall[2, offset + 1].GetComponent<Renderer>().enabled = false;
-            remainingblocks -= 12;
+
+            //untag removed blocks
+            wall[2, offset + 0].transform.tag = "Untagged";
+            wall[3, offset + 0].transform.tag = "Untagged";
+            wall[4, offset + 0].transform.tag = "Untagged";
+            wall[5, offset + 0].transform.tag = "Untagged";
+            wall[6, offset + 0].transform.tag = "Untagged";
+            wall[6, offset + 1].transform.tag = "Untagged";
+            wall[6, offset + 2].transform.tag = "Untagged";
+            wall[5, offset + 2].transform.tag = "Untagged";
+            wall[4, offset + 2].transform.tag = "Untagged";
+            wall[3, offset + 2].transform.tag = "Untagged";
+            wall[2, offset + 2].transform.tag = "Untagged";
+            wall[2, offset + 1].transform.tag = "Untagged";
+
+            //keep track of auto-depleted blocks
+            backgroundblocks -= 12;
         }
         else if (digit == 1)
         {
+            //disable object rendering
             wall[6, offset + 2].GetComponent<Renderer>().enabled = false;
             wall[5, offset + 2].GetComponent<Renderer>().enabled = false;
             wall[4, offset + 2].GetComponent<Renderer>().enabled = false;
             wall[3, offset + 2].GetComponent<Renderer>().enabled = false;
             wall[2, offset + 2].GetComponent<Renderer>().enabled = false;
-            remainingblocks -= 5;
+
+            //untag removed blocks
+            wall[6, offset + 2].transform.tag = "Untagged";
+            wall[5, offset + 2].transform.tag = "Untagged";
+            wall[4, offset + 2].transform.tag = "Untagged";
+            wall[3, offset + 2].transform.tag = "Untagged";
+            wall[2, offset + 2].transform.tag = "Untagged";
+
+            //keep track of auto-depleted blocks
+            backgroundblocks -= 5;
         }
         else if (digit == 2)
         {
+            //disable object rendering
             wall[2, offset + 0].GetComponent<Renderer>().enabled = false;
             wall[2, offset + 1].GetComponent<Renderer>().enabled = false;
             wall[2, offset + 2].GetComponent<Renderer>().enabled = false;
@@ -425,10 +458,26 @@ public class Show_Time : MonoBehaviour
             wall[6, offset + 0].GetComponent<Renderer>().enabled = false;
             wall[6, offset + 1].GetComponent<Renderer>().enabled = false;
             wall[6, offset + 2].GetComponent<Renderer>().enabled = false;
-            remainingblocks -= 11;
+
+            //untag removed blocks
+            wall[2, offset + 0].transform.tag = "Untagged";
+            wall[2, offset + 1].transform.tag = "Untagged";
+            wall[2, offset + 2].transform.tag = "Untagged";
+            wall[3, offset + 0].transform.tag = "Untagged";
+            wall[4, offset + 0].transform.tag = "Untagged";
+            wall[4, offset + 1].transform.tag = "Untagged";
+            wall[4, offset + 2].transform.tag = "Untagged";
+            wall[5, offset + 2].transform.tag = "Untagged";
+            wall[6, offset + 0].transform.tag = "Untagged";
+            wall[6, offset + 1].transform.tag = "Untagged";
+            wall[6, offset + 2].transform.tag = "Untagged";
+
+            //keep track of auto-depleted blocks
+            backgroundblocks -= 11;
         }
         else if (digit == 3)
         {
+            //disable object rendering
             wall[2, offset + 0].GetComponent<Renderer>().enabled = false;
             wall[3, offset + 2].GetComponent<Renderer>().enabled = false;
             wall[4, offset + 0].GetComponent<Renderer>().enabled = false;
@@ -440,10 +489,26 @@ public class Show_Time : MonoBehaviour
             wall[4, offset + 2].GetComponent<Renderer>().enabled = false;
             wall[2, offset + 2].GetComponent<Renderer>().enabled = false;
             wall[2, offset + 1].GetComponent<Renderer>().enabled = false;
-            remainingblocks -= 11;
+
+            //untag removed blocks
+            wall[2, offset + 0].transform.tag = "Untagged";
+            wall[3, offset + 2].transform.tag = "Untagged";
+            wall[4, offset + 0].transform.tag = "Untagged";
+            wall[5, offset + 2].transform.tag = "Untagged";
+            wall[6, offset + 0].transform.tag = "Untagged";
+            wall[6, offset + 1].transform.tag = "Untagged";
+            wall[6, offset + 2].transform.tag = "Untagged";
+            wall[4, offset + 1].transform.tag = "Untagged";
+            wall[4, offset + 2].transform.tag = "Untagged";
+            wall[2, offset + 2].transform.tag = "Untagged";
+            wall[2, offset + 1].transform.tag = "Untagged";
+
+            //keep track of auto-depleted blocks
+            backgroundblocks -= 11;
         }
         else if (digit == 4)
         {
+            //disable object rendering
             wall[6, offset + 2].GetComponent<Renderer>().enabled = false;
             wall[5, offset + 2].GetComponent<Renderer>().enabled = false;
             wall[4, offset + 2].GetComponent<Renderer>().enabled = false;
@@ -453,10 +518,24 @@ public class Show_Time : MonoBehaviour
             wall[4, offset + 0].GetComponent<Renderer>().enabled = false;
             wall[5, offset + 0].GetComponent<Renderer>().enabled = false;
             wall[6, offset + 0].GetComponent<Renderer>().enabled = false;
-            remainingblocks -= 9;
+
+            //untag removed blocks
+            wall[6, offset + 2].transform.tag = "Untagged";
+            wall[5, offset + 2].transform.tag = "Untagged";
+            wall[4, offset + 2].transform.tag = "Untagged";
+            wall[3, offset + 2].transform.tag = "Untagged";
+            wall[2, offset + 2].transform.tag = "Untagged";
+            wall[4, offset + 1].transform.tag = "Untagged";
+            wall[4, offset + 0].transform.tag = "Untagged";
+            wall[5, offset + 0].transform.tag = "Untagged";
+            wall[6, offset + 0].transform.tag = "Untagged";
+
+            //keep track of auto-depleted blocks
+            backgroundblocks -= 9;
         }
         else if (digit == 5)
         {
+            //disable object rendering
             wall[2, offset + 0].GetComponent<Renderer>().enabled = false;
             wall[2, offset + 1].GetComponent<Renderer>().enabled = false;
             wall[2, offset + 2].GetComponent<Renderer>().enabled = false;
@@ -468,10 +547,26 @@ public class Show_Time : MonoBehaviour
             wall[6, offset + 0].GetComponent<Renderer>().enabled = false;
             wall[6, offset + 1].GetComponent<Renderer>().enabled = false;
             wall[6, offset + 2].GetComponent<Renderer>().enabled = false;
-            remainingblocks -= 11;
+
+            //untag removed blocks
+            wall[2, offset + 0].transform.tag = "Untagged";
+            wall[2, offset + 1].transform.tag = "Untagged";
+            wall[2, offset + 2].transform.tag = "Untagged";
+            wall[3, offset + 2].transform.tag = "Untagged";
+            wall[4, offset + 0].transform.tag = "Untagged";
+            wall[4, offset + 1].transform.tag = "Untagged";
+            wall[4, offset + 2].transform.tag = "Untagged";
+            wall[5, offset + 0].transform.tag = "Untagged";
+            wall[6, offset + 0].transform.tag = "Untagged";
+            wall[6, offset + 1].transform.tag = "Untagged";
+            wall[6, offset + 2].transform.tag = "Untagged";
+
+            //keep track of auto-depleted blocks
+            backgroundblocks -= 11;
         }
         else if (digit == 6)
         {
+            //disable object rendering
             wall[2, offset + 0].GetComponent<Renderer>().enabled = false;
             wall[3, offset + 0].GetComponent<Renderer>().enabled = false;
             wall[4, offset + 0].GetComponent<Renderer>().enabled = false;
@@ -484,10 +579,27 @@ public class Show_Time : MonoBehaviour
             wall[3, offset + 2].GetComponent<Renderer>().enabled = false;
             wall[2, offset + 2].GetComponent<Renderer>().enabled = false;
             wall[2, offset + 1].GetComponent<Renderer>().enabled = false;
-            remainingblocks -= 12;
+
+            //untag removed blocks
+            wall[2, offset + 0].transform.tag = "Untagged";
+            wall[3, offset + 0].transform.tag = "Untagged";
+            wall[4, offset + 0].transform.tag = "Untagged";
+            wall[5, offset + 0].transform.tag = "Untagged";
+            wall[6, offset + 0].transform.tag = "Untagged";
+            wall[6, offset + 1].transform.tag = "Untagged";
+            wall[4, offset + 1].transform.tag = "Untagged";
+            wall[6, offset + 2].transform.tag = "Untagged";
+            wall[4, offset + 2].transform.tag = "Untagged";
+            wall[3, offset + 2].transform.tag = "Untagged";
+            wall[2, offset + 2].transform.tag = "Untagged";
+            wall[2, offset + 1].transform.tag = "Untagged";
+
+            //keep track of auto-depleted blocks
+            backgroundblocks -= 12;
         }
         else if (digit == 7)
         {
+            //disable object rendering
             wall[2, offset + 2].GetComponent<Renderer>().enabled = false;
             wall[3, offset + 2].GetComponent<Renderer>().enabled = false;
             wall[4, offset + 2].GetComponent<Renderer>().enabled = false;
@@ -495,10 +607,22 @@ public class Show_Time : MonoBehaviour
             wall[6, offset + 2].GetComponent<Renderer>().enabled = false;
             wall[6, offset + 1].GetComponent<Renderer>().enabled = false;
             wall[6, offset + 0].GetComponent<Renderer>().enabled = false;
-            remainingblocks -= 7;
+
+            //untag removed blocks
+            wall[2, offset + 2].transform.tag = "Untagged";
+            wall[3, offset + 2].transform.tag = "Untagged";
+            wall[4, offset + 2].transform.tag = "Untagged";
+            wall[5, offset + 2].transform.tag = "Untagged";
+            wall[6, offset + 2].transform.tag = "Untagged";
+            wall[6, offset + 1].transform.tag = "Untagged";
+            wall[6, offset + 0].transform.tag = "Untagged";
+
+            //keep track of auto-depleted blocks
+            backgroundblocks -= 7;
         }
         else if (digit == 8)
         {
+            //disable object rendering
             wall[2, offset + 0].GetComponent<Renderer>().enabled = false;
             wall[3, offset + 0].GetComponent<Renderer>().enabled = false;
             wall[4, offset + 0].GetComponent<Renderer>().enabled = false;
@@ -512,10 +636,28 @@ public class Show_Time : MonoBehaviour
             wall[3, offset + 2].GetComponent<Renderer>().enabled = false;
             wall[2, offset + 2].GetComponent<Renderer>().enabled = false;
             wall[2, offset + 1].GetComponent<Renderer>().enabled = false;
-            remainingblocks -= 13;
+
+            //untag removed blocks
+            wall[2, offset + 0].transform.tag = "Untagged";
+            wall[3, offset + 0].transform.tag = "Untagged";
+            wall[4, offset + 0].transform.tag = "Untagged";
+            wall[5, offset + 0].transform.tag = "Untagged";
+            wall[6, offset + 0].transform.tag = "Untagged";
+            wall[6, offset + 1].transform.tag = "Untagged";
+            wall[4, offset + 1].transform.tag = "Untagged";
+            wall[6, offset + 2].transform.tag = "Untagged";
+            wall[5, offset + 2].transform.tag = "Untagged";
+            wall[4, offset + 2].transform.tag = "Untagged";
+            wall[3, offset + 2].transform.tag = "Untagged";
+            wall[2, offset + 2].transform.tag = "Untagged";
+            wall[2, offset + 1].transform.tag = "Untagged";
+
+            //keep track of auto-depleted blocks
+            backgroundblocks -= 13;
         }
         else if (digit == 9)
         {
+            //disable object rendering
             wall[2, offset + 0].GetComponent<Renderer>().enabled = false;
             wall[4, offset + 0].GetComponent<Renderer>().enabled = false;
             wall[5, offset + 0].GetComponent<Renderer>().enabled = false;
@@ -528,13 +670,35 @@ public class Show_Time : MonoBehaviour
             wall[3, offset + 2].GetComponent<Renderer>().enabled = false;
             wall[2, offset + 2].GetComponent<Renderer>().enabled = false;
             wall[2, offset + 1].GetComponent<Renderer>().enabled = false;
-            remainingblocks -= 12;
+
+            //untag removed blocks
+            wall[2, offset + 0].transform.tag = "Untagged";
+            wall[4, offset + 0].transform.tag = "Untagged";
+            wall[5, offset + 0].transform.tag = "Untagged";
+            wall[6, offset + 0].transform.tag = "Untagged";
+            wall[6, offset + 1].transform.tag = "Untagged";
+            wall[4, offset + 1].transform.tag = "Untagged";
+            wall[6, offset + 2].transform.tag = "Untagged";
+            wall[5, offset + 2].transform.tag = "Untagged";
+            wall[4, offset + 2].transform.tag = "Untagged";
+            wall[3, offset + 2].transform.tag = "Untagged";
+            wall[2, offset + 2].transform.tag = "Untagged";
+            wall[2, offset + 1].transform.tag = "Untagged";
+
+            //keep track of auto-depleted blocks
+            backgroundblocks -= 12;
         }
+        //disable object rendering
         wall[3, 9].GetComponent<Renderer>().enabled = false;//Colon
         wall[5, 9].GetComponent<Renderer>().enabled = false;//Colon
-        if (offset == 1)
-        {//ensure that the colon is only subtracted once
-            remainingblocks -= 2;
+
+        //untag removed blocks
+        wall[3, 9].transform.tag = "Untagged";
+        wall[5, 9].transform.tag = "Untagged";
+
+        //keep track of auto-depleted blocks
+        if (offset == 1){//ensure that the colon is only subtracted once
+            backgroundblocks -= 2;
         }
     }
 
@@ -606,6 +770,7 @@ public class Show_Time : MonoBehaviour
             //Debug.Log("One");
         }
 
+        //this will turn off the alarm after one minute. we will change this to a customisable number
         if (alarmstate == true && time >= oldtime + alarmduration)
         {
             alarmstate = false;
@@ -631,10 +796,18 @@ public class Show_Time : MonoBehaviour
                 }
 
             }
+            //reset screen
             alarmstate = true;
             clearscreen(!alarmstate);//false
             clearscreen(alarmstate);//true
             destroytime(time);
+
+            //trigger once per alarm activation
+            if (alarminitialtrigger == true)
+            {
+                remainingblocks = backgroundblocks;//remainingblocks will be changed when the user destroys 1 or more blocks but initially, depending on the current time, the app will destroy some blocks to make the digits visible, this is our starting point
+                alarminitialtrigger = false;
+            }
         }
         else if (alarmstate == false && oldtime != time)
         {
@@ -650,7 +823,7 @@ public class Show_Time : MonoBehaviour
 
         if (colourtoggle == true)
         {
-            randcolour = Random.Range(0, 8);
+            randcolour = Random.Range(0,backgroundarraysize-1);
             if (randcolour == oldcolour)
             {
                 if (randcolour == 8)
@@ -727,6 +900,7 @@ public class Show_Time : MonoBehaviour
 
                         //spawn(copy.transform);
                     }
+                    Debug.Log("tmpblockcount: "+tmpblockcount);
                     remainingblocks -= tmpblockcount;
                     tmpblockcount = 0;
 
@@ -763,6 +937,7 @@ public class Show_Time : MonoBehaviour
                         //spawn(copy.transform);
                     }
                     remainingblocks -= tmpblockcount;
+                    Debug.Log("backgroundblocks: "+backgroundblocks+". remainingblocks: "+remainingblocks);
                     tmpblockcount = 0;
 
                 }
