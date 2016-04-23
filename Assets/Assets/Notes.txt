@@ -13,13 +13,7 @@ This class will do and contain the following:
 1)  Contain a list of all the variables needed to save all the details of the alarm. 
 These are:
             
-*   hour 1
-            
-*   hour 2
-            
-*   minute 1
-            
-*   minute 2
+*   unixtime
             
 *   Alarm name
             
@@ -61,24 +55,5 @@ These are:
             
 *   The prefab just created or "instantiated" will now show up in the "Main Menu" scene. 
         
-3)  There has to be a way to figure out which instance will be on top. Is it meerly the next time. 
-            
-What if one time is 1500 hours today. That is the only instance I have. So at 3pm the alarm is going to go off. However, if I create a second alarm at 1400 hours, that alarm will go off at 2pm today. Now this alarm instance is designated number 1 and 3pm is number 2.
- But what if the alarm is 1300 hours for 2 days time. So now, there are two things to consider. And there always was two things to consider. The day and the time of day. So a solution for this is if the alarm is set for today then it will be assigned a '0'. This way we have the following:
-            
-today       '0'
-   
-day two     '1'
-            
-day three   '2'
-            
-day four    '3'
-            
-day five    '4'
-            
-day six     '5'
-            
-day seven   '6'
-            
-There is a whole week. So my 3pm is 0:1500. My 2pm is 0:1400. And my 1pm is 2:1300. Simple. I do not know the best way exactly to do this, but the above concept is pretty clear cut. Does the "day of the week" variable need a Playpref? When you think about it. Every alarm could have a certain time set for all seven days of the week. That is seven settings. But there are 10 alarms possible. We coould theoritically have 70 individual alarm settings. 
+3)  There has to be a way to figure out which instance will be on top. This will be done using a unix timestamp
 
