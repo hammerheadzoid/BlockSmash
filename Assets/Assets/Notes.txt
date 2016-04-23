@@ -1,3 +1,11 @@
+CM-I have noticed two things which i will fix first off: the block count hasn't been repaired so the alarm won't turn off when all blocks destroyed as it should, i remember disabling this for testing so it shouldn't be too difficult to fix. 
+the other is: when the time changes while the alarm is active, the alarm turns off. i assume we want this to keep ringing for more than a minute? the way i will implement this will be so we can customise the length the alarm will ring for e.g. from 1-10 minutes so if we decide to give the user the option to change this it will be a simple update. also it will be easier for us to decide on a suitable default value.
+once that is done, i will look at edit_alarm.cs and hide the background blocks in some way, one idea is to create another wall behind to hide the background blocks, or simply blur out the block if it isn't selected (i.e. not in focus). both of these should be quick so i will show you each and we can decide which looks better, or perhaps a compromise between the two.
+once all of that is done and your stuff is done i suppose we should start linking all of the parts together (at the moment we have it set up so only one alarm will trigger and have no way of turning multiple alarms on/off). part of this will be ordering the alarms by Unix time.
+one small thing that needs to be looked at is the main screen, there is a circle visible in the centre of the screen which looks like its from a light source, so i say we should remove the light and make the blocks themselves self-luminating.
+there is also an issue with materials being loaded up incorrectly, since we use the unity ide to add the materials, it only textures the block when the scene loads initially, when we then switch scens and switch back the materials aren't being loaded. this is what i think is happening anyway and to fix this we can just create the materials from scratch in show_time.cs, that way they will be created every time the script is ran and there is no link that can be broken when switching scenes.
+
+
 Created single alarm prefab. Created the SingleAlarmPrefab.cs file too. Sorted out some notes in my head - and then wrote them all as a comment in the SingleAlarmPrefab.cs file. Here is what I wrote:
 This class will do and contain the following:
 
