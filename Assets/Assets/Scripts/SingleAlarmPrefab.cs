@@ -20,10 +20,17 @@ public class SingleAlarmPrefab : MonoBehaviour {
         PlayerPrefs.SetString("alarmTone", "alarmTone");                // Set the alarm name
         PlayerPrefs.SetString("bgImageLocation", "bgImageLocation");    // Set the alarm name
 
+
     }
 	
 	// Update is called once per frame
 	void Update () {
 	
 	}
+
+    public void EditAlarmButton() {
+
+        Debug.Log("A button was clicked...");
+
+    }
 }
