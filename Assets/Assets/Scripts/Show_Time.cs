@@ -961,7 +961,7 @@ public class Show_Time : MonoBehaviour
         blockpiece1mesh.Clear();
         blockpiece1mesh.vertices = new Vector3[3]{
             new Vector3 (0, 0, 20),
-            new Vector3 (Screen.width/difficulty, 0, 20),
+            new Vector3 (Screen.width/difficulty, 0, 20), 
             new Vector3 (0, Screen.height/difficulty, 20)
         };
         blockpiece1mesh.uv = new Vector2[3]{
