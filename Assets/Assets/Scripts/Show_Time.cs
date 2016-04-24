@@ -271,7 +271,6 @@ public class Show_Time : MonoBehaviour
                 if (remainingblocks <= 0)//will execute once per alarm, as it is closing
                 {
                     setupscreen();//required for resetting tags
-                    MainScreen_Button.GetComponent<Button>().interactable = true;
                     alarmfinished = true;
                     Camera.main.backgroundColor = new Color(0.4f, 0.4f, 0.4f);
                     oldtime = time;
@@ -362,7 +361,6 @@ public class Show_Time : MonoBehaviour
                     {
                         Debug.Log("initial alarm trigger activated (ONCE ONLY PER ALARM)");
                         remainingblocks = backgroundblocks;//remainingblocks will be changed when the user destroys 1 or more blocks but initially, depending on the current time, the app will destroy some blocks to make the digits visible, this is our starting point
-                        MainScreen_Button.GetComponent<Button>().interactable = false;
                         alarminitialtrigger = false;
                     }
                     if (playonce == true)
@@ -504,9 +502,11 @@ public class Show_Time : MonoBehaviour
         backgroundblocks = (difficulty - 1) * ((difficulty * 2) - 1);
         if (mode == false)
         {
+            MainScreen_Button.GetComponent<Button>().interactable = true;
             showtime(time);
         }
         else {
+            MainScreen_Button.GetComponent<Button>().interactable = false;
             destroytime(time);
         }
     }
