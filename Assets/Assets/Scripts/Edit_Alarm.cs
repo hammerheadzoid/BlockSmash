@@ -6,8 +6,8 @@ public class Edit_Alarm : MonoBehaviour {
 	// March 2nd Test Donal
 //hello donal
 	
-	public int time;
-	public int tmpalarm;
+	private int time;
+	private int tmpalarm;
 	private int digit1,digit2,digit3,digit4;
 	public GameObject wheel1,wheel2,wheel3,wheel4;
 	
@@ -29,16 +29,6 @@ public class Edit_Alarm : MonoBehaviour {
 	}
 
     void Update () {
-	
-		digit1%=3;
-		digit2%=10;
-		digit3%=6;
-		digit4%=10;
-
-		time = digit1 * 1000 + digit2 * 100 + digit3 * 10 + digit4;
-		tmpalarm = time;//temporary
-		PlayerPrefs.SetInt ("PlayerPrefs_tmpalarm",tmpalarm);//temporary
-
 	}
 
 	void setinitialtime(int time){
@@ -74,10 +64,24 @@ public class Edit_Alarm : MonoBehaviour {
 
     }
 
+    public void updatealarm() {
+        digit1 %= 3;
+        digit2 %= 10;
+        digit3 %= 6;
+        digit4 %= 10;
+
+        time = digit1 * 1000 + digit2 * 100 + digit3 * 10 + digit4;
+        Debug.Log(time);
+        tmpalarm = time;//temporary
+        Debug.Log(tmpalarm);
+        PlayerPrefs.SetInt("PlayerPrefs_tmpalarm", tmpalarm);//temporary
+    }
+
     public void wheeloneup()
     {
         wheel1.transform.Rotate(120, 0, 0);//360/3
         digit1++;
+        updatealarm();
     }
 
     public void wheelonedown()
@@ -88,6 +92,7 @@ public class Edit_Alarm : MonoBehaviour {
         {
             digit1 = 2;
         }
+        updatealarm();
     }
 
     public void wheeltwoup()
@@ -101,6 +106,7 @@ public class Edit_Alarm : MonoBehaviour {
             digit1++;
         }
         */
+        updatealarm();
     }
 
     public void wheeltwodown()
@@ -111,6 +117,7 @@ public class Edit_Alarm : MonoBehaviour {
         {
             digit2 = 9;
         }
+        updatealarm();
     }
 
     public void wheelthreeup()
@@ -129,6 +136,7 @@ public class Edit_Alarm : MonoBehaviour {
             }
         }
         */
+        updatealarm();
     }
 
     public void wheelthreedown()
@@ -139,6 +147,7 @@ public class Edit_Alarm : MonoBehaviour {
         {
             digit3 = 5;
         }
+        updatealarm();
     }
 
     public void wheelfourup()
@@ -162,6 +171,7 @@ public class Edit_Alarm : MonoBehaviour {
             }
         }
         */
+        updatealarm();
     }
 
     public void wheelfourdown()
@@ -172,5 +182,6 @@ public class Edit_Alarm : MonoBehaviour {
         {
             digit4 = 9;
         }
+        updatealarm();
     }
 }
