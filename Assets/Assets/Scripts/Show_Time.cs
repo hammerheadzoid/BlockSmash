@@ -98,7 +98,7 @@ public class Show_Time : MonoBehaviour
         Vector3 temp = Camera.main.transform.position;
         temp.x = Screen.width / 2;
         temp.y = Screen.height / 2;
-        temp.z = 1;
+        temp.z = 10;
 
         Camera.main.transform.position = temp;
         Camera.main.transform.Rotate(0, 180, 0);
@@ -443,6 +443,7 @@ public class Show_Time : MonoBehaviour
             for (int j = 0; (j < difficulty * 2 - 1); j++)
             {
                 wall[i, j].GetComponent<Renderer>().material.color = colours[Random.Range(0, colorcount)];
+                wall[i, j].GetComponent<Renderer>().material.shader = Shader.Find("Standard");
                 wall[i, j].GetComponent<Renderer>().enabled = true;
 
                 //merge blocks
