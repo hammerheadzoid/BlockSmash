@@ -1,4 +1,5 @@
 ﻿using UnityEngine;
+using UnityEngine.UI;
 using System.Collections;
 
 public class Show_Time : MonoBehaviour
@@ -10,7 +11,7 @@ public class Show_Time : MonoBehaviour
     public int colorcount = 5;//with higher difficulties, colorcount can be increased to include more colours, (max is 7 for now)
     private int randcolour;
     private int oldcolour;
-    public bool alarmstate;
+    private bool alarmstate;
     public GameObject[,] wall;
     public int snooze = 10;
     public int alarmduration = 3;
@@ -36,13 +37,30 @@ public class Show_Time : MonoBehaviour
     private Material tmpmaterial;
     private const int backgroundarraysize=8;
 
-    private int backgroundblocks;
+    public int backgroundblocks;
     public int remainingblocks;
     private bool alarminitialtrigger;
+    public Transform MainScreen_Button;
 
     private bool screenchange = false;
     private float flashtimer = 0;
     private bool colourtoggle = false;
+
+    private float blockwidth;
+    private float blockheight;
+
+    private GameObject blockparent;
+    private GameObject block;
+    private Mesh blockmesh;
+    private MeshFilter blockmeshfilter;
+    private MeshRenderer blockmeshrenderer;
+    private GameObject tmpblock1;
+    private GameObject tmpblock2;
+    private int blockindex;
+    private BoxCollider2D newcollider;
+    private GameObject[] copies;
+    RaycastHit2D destroyedblock;
+
     private Color[] backgroundcolours = new Color[backgroundarraysize]{
         Color.blue,
         Color.cyan,
@@ -54,20 +72,24 @@ public class Show_Time : MonoBehaviour
         Color.yellow,
     };
 
+    //create colour selection array
+    private Color32[] colours = new Color32[9]{
+            new Color32(246,150,121,1),//red
+			new Color32(130,202,156,1),//dark green
+			new Color32(131,147,202,1),//dark blue
+			new Color32(255,247,153,1),//yellow
+			new Color32(095,175,153,1),//green
+			new Color32(125,167,217,1),//cyan
+			new Color32(161,134,190,1),//violet
+			new Color32(244,154,193,1),//magenta
+			new Color32(252,186,115,1)//orange
+		};
+
     public Material settingsicon_material;
 
     void Start()
     {
-        //create wall
-        GameObject blockparent = new GameObject();
-        blockparent.name = "Wall";
-        playonce = true;
-        //Debug.Log("I am in Start: playonce is " + playonce);
-
-        alarm_1 = PlayerPrefs.GetInt("PlayerPrefs_alarm_1");//temporary
-        alarm_2 = PlayerPrefs.GetInt("PlayerPrefs_alarm_2");//temporary
-        alarm_3 = PlayerPrefs.GetInt("PlayerPrefs_alarm_3");//temporary
-
+        alarmstate = false;
         //lock screen rotation
         Screen.orientation = ScreenOrientation.Portrait;
 
@@ -81,23 +103,34 @@ public class Show_Time : MonoBehaviour
         Camera.main.transform.Rotate(0, 180, 0);
 
         //set background colour initially
-        Camera.main.backgroundColor = Color.black;
+        Camera.main.backgroundColor = Color.blue;
 
         //set alarm trigger flag, used to execute code once per alarm activation
         alarminitialtrigger = true;
 
         //create wall skeleton
         wall = new GameObject[difficulty, difficulty * 2];//2d array containing all blocks
-        float blockwidth = Screen.width / difficulty;
-        float blockheight = Screen.height / difficulty / 2;
+        blockwidth = Screen.width / difficulty;
+        blockheight = Screen.height / difficulty / 2;
 
         //scale maincamera
         Camera.main.orthographicSize = Screen.height / 2 - blockheight;
 
+        //create wall
+        blockparent = new GameObject();
+        blockparent.name = "Wall";
+        playonce = true;
+        //Debug.Log("I am in Start: playonce is " + playonce);
+
+        alarm_1 = PlayerPrefs.GetInt("PlayerPrefs_alarm_1");//temporary
+        alarm_2 = PlayerPrefs.GetInt("PlayerPrefs_alarm_2");//temporary
+        alarm_3 = PlayerPrefs.GetInt("PlayerPrefs_alarm_3");//temporary
+
+
         //Create Block Prefab (Unbroken)
-        GameObject block = new GameObject();
+        block = new GameObject();
         block.name = "Block";
-        Mesh blockmesh = new Mesh();
+        blockmesh = new Mesh();
         blockmesh.name = "Block_Mesh";
         blockmesh.Clear();//clear vertex,triangle data, etc.
         blockmesh.vertices = new Vector3[4]{
@@ -107,6 +140,7 @@ public class Show_Time : MonoBehaviour
             new Vector3 (blockwidth, blockheight, 0)
         };
 
+        //Set up block unit vectors
         blockmesh.uv = new Vector2[4]{
             new Vector2 (0, 0),
             new Vector2 (1, 0),
@@ -114,52 +148,63 @@ public class Show_Time : MonoBehaviour
             new Vector2 (1, 1)
         };
 
+        //setupscreen up block triangles for rendering
         blockmesh.triangles = new int[6] { 0, 1, 2, 1, 3, 2 };
         blockmesh.RecalculateNormals();
-        MeshFilter blockmeshfilter = (MeshFilter)block.gameObject.AddComponent(typeof(MeshFilter));
-        MeshRenderer blockmeshrenderer = (MeshRenderer)block.gameObject.AddComponent(typeof(MeshRenderer));
+        blockmeshfilter = (MeshFilter)block.gameObject.AddComponent(typeof(MeshFilter));
+        blockmeshrenderer = (MeshRenderer)block.gameObject.AddComponent(typeof(MeshRenderer));
         blockmeshfilter.mesh = blockmesh;
-
-        //create colour selection array
-        Color32[] colours = new Color32[9]{
-            new Color32(246,150,121,1),//red
-			new Color32(130,202,156,1),//dark green
-			new Color32(131,147,202,1),//dark blue
-			new Color32(255,247,153,1),//yellow
-			new Color32(095,175,153,1),//green
-			new Color32(125,167,217,1),//cyan
-			new Color32(161,134,190,1),//violet
-			new Color32(244,154,193,1),//magenta
-			new Color32(252,186,115,1)//orange
-		};
 
         //default material to apply to blocks
         tmpmaterial = new Material(Shader.Find("Diffuse"));
         tmpmaterial.color = new Color32(255, 255, 255, 1);//white
 
-        //store adjacent blocks
-        int blockindex = 0;//give each block group unique identifiers
-        GameObject tmpblock1 = block;//right
-        GameObject tmpblock2 = block;//down
+        for (int i = 0; (i < difficulty - 1); i++)
+        {
+            for (int j = 0; (j < difficulty * 2 - 1); j++)
+            {
+                //create wall of blocks by instantiating the prefab created earlier
+                wall[i, j] = (GameObject)Instantiate(block, Vector3.zero, Quaternion.identity);
+                wall[i, j].transform.parent = blockparent.transform;
+                wall[i, j].transform.position = new Vector3((i * blockwidth) + blockwidth / 2, (j * blockheight) + blockheight / 2, 0.0f);
 
-        GameObject oldname;//used for overwriting block names in cases when both the right and below block are the same colour
+                //add collider to blocks so they can be destroyed
+                newcollider = wall[i, j].AddComponent<BoxCollider2D>();
+                newcollider.transform.position = wall[i, j].transform.position;
+                newcollider.size = wall[i, j].GetComponent<Renderer>().bounds.size;
+            }
+        }
+        //set time variable initially
+        timenow = System.DateTime.Now;
+        time = timenow.Hour * 100 + timenow.Minute;
+        oldtime = time;
+
+        setupscreen();
+        Destroy(block);//delete prefab as its no longer needed
+    }
+
+    void setupscreen() {
+    
+        //store adjacent blocks
+        blockindex = 0;//give each block group unique identifiers
+        tmpblock1 = block;//right
+        tmpblock2 = block;//down
+
+        wall[0,0].tag = "" + blockindex;
 
         for (int i = 0; (i < difficulty - 1); i++)
         {
             for (int j = 0; (j < difficulty * 2 - 1); j++)
             {
-                wall[i, j] = (GameObject)Instantiate(block, Vector3.zero, Quaternion.identity);
-                wall[i, j].transform.parent = blockparent.transform;
-                wall[i, j].transform.position = new Vector3((i * blockwidth) + blockwidth / 2, (j * blockheight) + blockheight / 2, 0.0f);
                 wall[i, j].GetComponent<Renderer>().material.color = colours[Random.Range(0, colorcount)];
-                wall[i, j].GetComponent<Renderer>().enabled = false;
+                wall[i, j].GetComponent<Renderer>().enabled = true;
 
                 //merge blocks
                 if (i >= 1) { tmpblock1 = wall[i - 1, j]; }
                 else { tmpblock1 = null; }
                 if (j >= 1) { tmpblock2 = wall[i, j - 1]; }
                 else { tmpblock2 = null; }
-                GameObject[] copies = null;
+                copies = null;
 
                 //search for all bricks with name of block below, and change it to the block to the right
                 if (tmpblock1 != null && tmpblock2 != null && wall[i, j].GetComponent<Renderer>().material.color == tmpblock1.GetComponent<Renderer>().material.color && wall[i, j].GetComponent<Renderer>().material.color == tmpblock2.GetComponent<Renderer>().material.color)
@@ -189,14 +234,11 @@ public class Show_Time : MonoBehaviour
                     wall[i, j].tag = "" + blockindex;
                     blockindex++;
                 }
-                //add collider to blocks so they can be destroyed
-                BoxCollider2D newcollider = wall[i, j].AddComponent<BoxCollider2D>();
-                newcollider.transform.position = wall[i, j].transform.position;
-                newcollider.size = wall[i, j].GetComponent<Renderer>().bounds.size;
             }
         }
-        Destroy(block);
+        clearscreen(false);
     }
+
 
     void clearscreen(bool mode)
     {//true to erase all, false to create all
@@ -210,7 +252,15 @@ public class Show_Time : MonoBehaviour
                 }
             }
         }
+
         backgroundblocks = (difficulty - 1) * ((difficulty * 2) - 1);
+        if (mode == false)
+        {
+            showtime(time);
+        }
+        else {
+            destroytime(time);
+        }
     }
 
     void showdigit(int digit, int offset)
@@ -223,6 +273,9 @@ public class Show_Time : MonoBehaviour
         {
             offset = 5;
         }
+
+        //the colon (:) between hours and minutes accounts for the extra jump in offset
+
         else if (offset == 3)
         {
             offset = 11;
@@ -761,66 +814,170 @@ public class Show_Time : MonoBehaviour
         timenow = System.DateTime.Now;
         time = timenow.Hour * 100 + timenow.Minute;
 
-        if (alarmstate == true && remainingblocks <= 0)
+        if (alarmstate == true)
         {
-            clearscreen(alarmstate);//true
-            Camera.main.backgroundColor = Color.black;
-            showtime(time);
-            oldtime = time;
-            //Debug.Log("One");
-        }
-
-        //this will turn off the alarm after one minute. we will change this to a customisable number
-        if (alarmstate == true && time >= oldtime + alarmduration)
-        {
-            alarmstate = false;
-            //Debug.Log("Two");
-        }
-
-        if (alarmstate == false && (time == alarm_1 || time == alarm_2 || time == alarm_3))
-        {
-            //Debug.Log ("Alarm Playing Now");
-
-            if (playonce == true)
+            if (remainingblocks >= 1)
             {
-                AudioSource.PlayClipAtPoint(Alarm_Sound, Vector3.zero);
-                playonce = false;
-
-                if (t > threshold)
+                if (Input.touchCount == 1 && pressed == false)
                 {
-                    t = 0.0f;
-                    playonce = true;
+                    copies = null;
+                    pressed = true;
+                    destroyedblock = Physics2D.Raycast(Camera.main.ScreenToWorldPoint((Input.GetTouch(0).position)), Vector2.zero);
+                    if (destroyedblock.collider != null)
+                    {
+
+                        //obsolete, object not rendered now instead
+                        //Destroy (destroyedblock.transform.gameObject, 0.0f);//0.5f -> destroy block half a second later
+                        //spawn(destroyedblock.transform);
+
+                        if (copies == null)
+                        {
+                            copies = GameObject.FindGameObjectsWithTag(destroyedblock.transform.tag);
+                        }
+
+                        foreach (GameObject copy in copies)
+                        {
+                            tmpblockcount++;
+                            copy.GetComponent<Renderer>().enabled = false;
+                            copy.transform.tag = "Untagged";
+
+                            //spawn(copy.transform);
+                        }
+                        Debug.Log("tmpblockcount: " + tmpblockcount);
+                        remainingblocks -= tmpblockcount;
+                        tmpblockcount = 0;
+
+                    }
+                }
+                else if (Input.touchCount == 0)
+                {
+                    pressed = false;
+                }
+
+                //used for pc debugging only
+                if (Input.GetButton("Fire1"))//GetButtonDown for more realistic single click (GetButton is faster for testing)
+                {
+                    copies = null;
+                    pressed = true;
+                    RaycastHit2D destroyedblock = Physics2D.Raycast(new Vector2(Screen.width - Input.mousePosition.x, Input.mousePosition.y), Vector2.zero);
+                    if (destroyedblock.collider != null)
+                    {
+
+                        //obsolete, object not rendered now instead
+                        //Destroy (destroyedblock.transform.gameObject, 0.0f);//0.5f -> destroy block half a second later
+                        //spawn(destroyedblock.transform);
+
+                        if (copies == null)
+                        {
+                            copies = GameObject.FindGameObjectsWithTag(destroyedblock.transform.tag);
+                        }
+
+                        foreach (GameObject copy in copies)
+                        {
+                            tmpblockcount++;
+                            copy.GetComponent<Renderer>().enabled = false;
+                            copy.transform.tag = "Untagged";
+
+                            //spawn(copy.transform);
+                        }
+                        remainingblocks -= tmpblockcount;
+                        Debug.Log("backgroundblocks: " + backgroundblocks + ". remainingblocks: " + remainingblocks);
+                        tmpblockcount = 0;
+
+                    }
                 }
                 else {
-                    playonce = false;
+                    pressed = false;
                 }
 
-            }
-            //reset screen
-            alarmstate = true;
-            clearscreen(!alarmstate);//false
-            clearscreen(alarmstate);//true
-            destroytime(time);
+                if (remainingblocks <= 0)//will execute once per alarm, as it is closing
+                {
+                    setupscreen();//required for resetting tags
+                    MainScreen_Button.GetComponent<Button>().interactable = true;
+                    Camera.main.backgroundColor = Color.blue;
+                    oldtime = time;
+                    //return;
+                    //Debug.Log("One");
+                }
 
-            //trigger once per alarm activation
-            if (alarminitialtrigger == true)
-            {
-                remainingblocks = backgroundblocks;//remainingblocks will be changed when the user destroys 1 or more blocks but initially, depending on the current time, the app will destroy some blocks to make the digits visible, this is our starting point
-                alarminitialtrigger = false;
+                //this will turn off the alarm after a few minutes, check above, i'm not arsed. we will change this to a customisable number
+                if (time >= oldtime + alarmduration)
+                {
+                    alarmstate = false;
+                    //Debug.Log("Two");
+                }
+
+                flashtimer += Time.deltaTime;//time passed since last screen refresh
+                if (flashtimer > 1.5f)
+                {
+                    colourtoggle = true;
+                    GetComponent<AudioSource>().Play();
+                    flashtimer = 0;
+                }
+                else {
+                    colourtoggle = false;
+                }
+
+                if (Input.touchCount == 3 && reset == false)
+                {
+                    reset = true;
+                    //Application.LoadLevel(0);
+                }
+                else if (Input.touchCount == 0)
+                {
+                    reset = false;
+                }
+                feckoff();//rotate block pieces and fire them off screen
+
+            }
+            else {//remainingblocks<=1
+                alarmstate = false;//trun off alarm
+                //setupscreen();
+                
+                //clearscreen(alarmstate);
             }
         }
-        else if (alarmstate == false && oldtime != time)
-        {
-            Debug.Log("no alarm triggered");
-            clearscreen(alarmstate);//false
-            Camera.main.backgroundColor = Color.black;
-            showtime(time);
-            oldtime = time;
-        }
-        else {
-            return;//do nothing
+        else {//alarm state is false
+            //setupscreen();
+            if (time == alarm_1 || time == alarm_2 || time == alarm_3) {
+                alarmstate = true;
+                clearscreen(alarmstate);
+
+                //trigger once per alarm activation
+                if (alarminitialtrigger == true)
+                {
+                    Debug.Log("initial alarm trigger activated (ONCE ONLY)");
+                    remainingblocks = backgroundblocks;//remainingblocks will be changed when the user destroys 1 or more blocks but initially, depending on the current time, the app will destroy some blocks to make the digits visible, this is our starting point
+                    MainScreen_Button.GetComponent<Button>().interactable = false;
+                    alarminitialtrigger = false;
+                }
+                if (playonce == true)
+                {
+                    AudioSource.PlayClipAtPoint(Alarm_Sound, Vector3.zero);
+                    playonce = false;
+
+                    if (t > threshold)
+                    {
+                        t = 0.0f;
+                        playonce = true;
+                    }
+                    else {
+                        playonce = false;
+                    }
+
+                }
+            }
+            if (oldtime != time) {
+                MainScreen_Button.GetComponent<Button>().interactable = true;
+                Debug.Log("no alarm triggered");
+                clearscreen(alarmstate);//false
+                Camera.main.backgroundColor = Color.blue;
+                oldtime = time;
+            }
+
         }
 
+        //change background colour randomly while alarm is on
         if (colourtoggle == true)
         {
             randcolour = Random.Range(0,backgroundarraysize-1);
@@ -841,111 +998,6 @@ public class Show_Time : MonoBehaviour
         else {
             //audio.Stop();
             //Camera.main.backgroundColor = Color.blue;
-        }
-
-        if (alarmstate == true)
-        {
-            flashtimer += Time.deltaTime;//time passed since last screen refresh
-            if (flashtimer > 1.5f)
-            {
-                colourtoggle = true;
-                GetComponent<AudioSource>().Play();
-                flashtimer = 0;
-            }
-            else {
-                colourtoggle = false;
-            }
-        }
-
-        else {
-            showtime(time);
-        }
-
-        //Section to handle user destroying blocks
-        if (alarmstate == true)
-        {
-            if (Input.touchCount == 3 && reset == false)
-            {
-                reset = true;
-                Application.LoadLevel(0);
-            }
-            else if (Input.touchCount == 0)
-            {
-                reset = false;
-            }
-            feckoff();//rotate block pieces and fire them off screen
-            GameObject[] copies = null;
-
-            if (Input.touchCount == 1 && pressed == false)
-            {
-                pressed = true;
-                RaycastHit2D destroyedblock = Physics2D.Raycast(Camera.main.ScreenToWorldPoint((Input.GetTouch(0).position)), Vector2.zero);
-                if (destroyedblock.collider != null)
-                {
-
-                    //obsolete, object not rendered now instead
-                    //Destroy (destroyedblock.transform.gameObject, 0.0f);//0.5f -> destroy block half a second later
-                    //spawn(destroyedblock.transform);
-
-                    if (copies == null)
-                    {
-                        copies = GameObject.FindGameObjectsWithTag(destroyedblock.transform.tag);
-                    }
-
-                    foreach (GameObject copy in copies)
-                    {
-                        tmpblockcount++;
-                        copy.GetComponent<Renderer>().enabled = false;
-                        copy.transform.tag = "Untagged";
-
-                        //spawn(copy.transform);
-                    }
-                    Debug.Log("tmpblockcount: "+tmpblockcount);
-                    remainingblocks -= tmpblockcount;
-                    tmpblockcount = 0;
-
-                }
-            }
-            else if (Input.touchCount == 0)
-            {
-                pressed = false;
-            }
-
-            //used for debugging only
-            if (Input.GetButtonDown("Fire1"))
-            {
-                pressed = true;
-                RaycastHit2D destroyedblock = Physics2D.Raycast(new Vector2(Screen.width - Input.mousePosition.x, Input.mousePosition.y), Vector2.zero);
-                if (destroyedblock.collider != null)
-                {
-
-                    //obsolete, object not rendered now instead
-                    //Destroy (destroyedblock.transform.gameObject, 0.0f);//0.5f -> destroy block half a second later
-                    //spawn(destroyedblock.transform);
-
-                    if (copies == null)
-                    {
-                        copies = GameObject.FindGameObjectsWithTag(destroyedblock.transform.tag);
-                    }
-
-                    foreach (GameObject copy in copies)
-                    {
-                        tmpblockcount++;
-                        copy.GetComponent<Renderer>().enabled = false;
-                        copy.transform.tag = "Untagged";
-
-                        //spawn(copy.transform);
-                    }
-                    remainingblocks -= tmpblockcount;
-                    Debug.Log("backgroundblocks: "+backgroundblocks+". remainingblocks: "+remainingblocks);
-                    tmpblockcount = 0;
-
-                }
-            }
-            else {
-                pressed = false;
-            }
-
         }
     }
 
@@ -976,9 +1028,9 @@ public class Show_Time : MonoBehaviour
         blockpiece1mesh.RecalculateNormals();
         MeshFilter blockpiece1meshfilter = (MeshFilter)blockpiece1.gameObject.AddComponent(typeof(MeshFilter));
         MeshRenderer blockpiece1meshrenderer = (MeshRenderer)blockpiece1.gameObject.AddComponent(typeof(MeshRenderer));
-        //blockmeshrenderer.enabled = false;//get rid of that fucking annoying pink bastard
+
         blockpiece1meshfilter.mesh = blockpiece1mesh;
-        //
+
         blockpiece2mesh.Clear();
         blockpiece2mesh.vertices = new Vector3[3]{
             new Vector3 (Screen.width/difficulty, 0, 20),
@@ -997,10 +1049,8 @@ public class Show_Time : MonoBehaviour
         blockpiece2mesh.RecalculateNormals();
         MeshFilter blockpiece2meshfilter = (MeshFilter)blockpiece2.gameObject.AddComponent(typeof(MeshFilter));
         MeshRenderer blockpiece2meshrenderer = (MeshRenderer)blockpiece2.gameObject.AddComponent(typeof(MeshRenderer));
-        //blockmeshrenderer.enabled = false;//get rid of that fucking annoying pink bastard
+
         blockpiece2meshfilter.mesh = blockpiece2mesh;
-        //
-        //blockpiece3mesh.Clear ();
 
         //spawn pieces
         newblockpiece1 = (GameObject)Instantiate(blockpiece1, blockposition.position, Quaternion.identity);
