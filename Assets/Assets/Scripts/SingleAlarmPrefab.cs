@@ -1,4 +1,5 @@
 ﻿using UnityEngine;
+using UnityEngine.UI;
 using System.Collections;
 
 public class SingleAlarmPrefab : MonoBehaviour {
@@ -31,8 +32,6 @@ public class SingleAlarmPrefab : MonoBehaviour {
         3)  There has to be a way to figure out which instance will be on top. This will be done using a unix timestamp
      */
 
-    public GameObject alarmInstance;
-
     // Use this for initialization. Create the playerprefs here. 
     void Start () {
 
@@ -49,15 +48,11 @@ public class SingleAlarmPrefab : MonoBehaviour {
         PlayerPrefs.SetInt("volume", 50);                               // Set volume (0 - 99)
         PlayerPrefs.SetString("alarmTone", "alarmTone");                // Set the alarm name
         PlayerPrefs.SetString("bgImageLocation", "bgImageLocation");    // Set the alarm name
-        Debug.Log("In alarm instance start.");
     }
 	
 	// Update is called once per frame
 	void Update () {
 
-        if (Input.GetKeyUp("l")) {
-            Instantiate (alarmInstance);
-            Debug.Log("You clicked L");
-        }
-	}
+ 
+    }
 }
