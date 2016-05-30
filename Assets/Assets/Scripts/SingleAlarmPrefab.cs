@@ -4,6 +4,10 @@ using System.Collections;
 
 public class SingleAlarmPrefab : MonoBehaviour {
 
+    public int sunCheck02 = 1;
+    public Button sunButton;
+  
+
     /*
     This class will do and contain the following:
 
@@ -37,14 +41,14 @@ public class SingleAlarmPrefab : MonoBehaviour {
 
         PlayerPrefs.SetInt("unixTime", 123456);                         // Set time variable
         PlayerPrefs.SetString("alarmName", "alarmName");                // Set the alarm name
-        PlayerPrefs.SetInt("RepeatWeekly", 1);                          // Repeat Weekly Yes/No
-        PlayerPrefs.SetInt("sun", 0);                                   // Set sun as checked
-        PlayerPrefs.SetInt("mon", 0);                                   // Set mon as checked
-        PlayerPrefs.SetInt("tue", 0);                                   // Set tue as checked
-        PlayerPrefs.SetInt("wed", 0);                                   // Set wed as checked
-        PlayerPrefs.SetInt("thr", 0);                                   // Set thr as checked
-        PlayerPrefs.SetInt("fri", 0);                                   // Set fri as checked
-        PlayerPrefs.SetInt("sat", 0);                                   // Set sat as checked
+        PlayerPrefs.SetInt("RepeatWeekly", 1);                          // Repeat Weekly Yes = 1 / No = 2
+        PlayerPrefs.SetInt("sun", 0);                                   // Set sun as unchecked
+        PlayerPrefs.SetInt("mon", 0);                                   // Set mon as unchecked
+        PlayerPrefs.SetInt("tue", 0);                                   // Set tue as unchecked
+        PlayerPrefs.SetInt("wed", 0);                                   // Set wed as unchecked
+        PlayerPrefs.SetInt("thr", 0);                                   // Set thr as unchecked
+        PlayerPrefs.SetInt("fri", 0);                                   // Set fri as unchecked
+        PlayerPrefs.SetInt("sat", 0);                                   // Set sat as unchecked
         PlayerPrefs.SetInt("volume", 50);                               // Set volume (0 - 99)
         PlayerPrefs.SetString("alarmTone", "alarmTone");                // Set the alarm name
         PlayerPrefs.SetString("bgImageLocation", "bgImageLocation");    // Set the alarm name
@@ -54,5 +58,28 @@ public class SingleAlarmPrefab : MonoBehaviour {
 	void Update () {
 
  
+    }
+
+    public void checkWeekDay()
+    {
+        if (sunCheck02 != 1 && sunCheck02 != 0)
+        {
+            sunCheck02 = 1;
+        }
+
+        if (sunCheck02 == 0)
+        {
+            sunCheck02 = 1;
+            ColorBlock colorblock = ColorBlock.defaultColorBlock;
+            colorblock.normalColor = new Color(1, 0, 0);
+            sunButton.GetComponent<Button>().colors = colorblock;
+            //sunButton.colors.normalColor = Color.blue;
+            Debug.Log("sunCheck02 is now 1");
+        }
+        else if (sunCheck02 == 1)
+        {
+            sunCheck02 = 0;
+            Debug.Log("sunCheck02 is now 0");
+        }
     }
 }
